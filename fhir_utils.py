@@ -1,24 +1,5 @@
-import json
 import re
 from fhir.resources.R4B.bundle import Bundle
-from pydantic import ValidationError
-
-def validate_fhir_bundle(llm_text: str):
-    """Cleans LLM output and validates against FHIR R4/R4B specs."""
-    clean_json_str = llm_text.strip()
-    if clean_json_str.startswith("```json"):
-        clean_json_str = clean_json_str.removeprefix("```json").removesuffix("```").strip()
-    elif clean_json_str.startswith("```"):
-        clean_json_str = clean_json_str.removeprefix("```").removesuffix("```").strip()
-
-    try:
-        bundle_dict = json.loads(clean_json_str)
-        # Validate using fhir.resources (Pydantic V2)
-        bundle = Bundle.model_validate(bundle_dict)
-        return bundle.model_dump(exclude_none=True)
-    except (json.JSONDecodeError, ValidationError) as e:
-        print(f"❌ Validation Failed: {e}")
-        return None
 
 def run_custom_logical_validations(bundle_dict):
     """Performs referential integrity and UUID format checks."""
