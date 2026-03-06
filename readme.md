@@ -10,11 +10,11 @@ Rather than a "finished product" manual, this README tracks our architectural pi
 We have successfully implemented a professional evaluation architecture and upgraded our extraction engine to leverage native Gemini capabilities for 100% reliability.
 
 ### Recent Breakthroughs
-- **[2024-03-05] LLM-as-a-Judge & Elite Benchmark:**
+- **[2026-03-05] LLM-as-a-Judge & Elite Benchmark:**
     - **Curation:** Developed `curate_complex_samples.py` to filter the **Top 1%** most structural and complex medical notes from the dataset.
     - **Judgment:** Implemented `evaluator.py` where `gemini-pro-latest` acts as a Chief Medical Officer, scoring extraction quality on Recall, Precision, and Integrity.
     - **Result:** Established a high-complexity baseline of **9.15/10** clinical accuracy.
-- **[2024-03-05] Native Structured Output Upgrade:**
+- **[2026-03-05] Native Structured Output Upgrade:**
     - **Modernization:** Refactored the pipeline to use Gemini's **Native JSON Schema** enforcement (`response_json_schema`).
     - **Efficiency:** Removed 30% of prompt formatting noise, allowing the model to focus purely on clinical reasoning.
     - **Reliability:** Structural failure rate reduced to effectively **0%**.
@@ -89,13 +89,3 @@ I'm aiming for a professional-grade clinical intelligence system that **reasons*
 *   **Streaming Classification**: High-availability websockets for instantaneous response.
 
 ---
-
-## 📂 Future Expansion: Portuguese & Global Coding
-For the upcoming phases (Sprint 1), we have identified key datasets for bilingual and coding-heavy experimentation:
-1. **BRATECA (Brazilian Tertiary Care Dataset)**: ~2.5M free-text notes from 10 Brazilian hospitals. Our primary target for PT-BR clinical logic.
-2. **SemClinBr**: A semantically annotated Brazilian corpus (1,000 notes). Essential for "Gold Standard" validation.
-3. **ClinPt**: European Portuguese case texts from the *Sinapse* journal for terminology nuance testing.
-
----
-
-*Disclaimer: This is an experimental research project. Do not use for actual PHI or clinical decision-making.*
