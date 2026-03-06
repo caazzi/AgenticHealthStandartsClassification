@@ -1,6 +1,6 @@
 # 🏥 HealthNotes-to-FHIR: Development Diary
 
-**The clinical world is trapped in a "Free-Text Silo" where 80% of patient data is locked in unstructured notes, invisible to modern analytical systems. This repository bridges the clinical interoperability gap by transforming raw medical transcriptions into production-grade, cryptographically audited FHIR R4 resources.**
+**The healthcare world is trapped in a "free-text silo" where much of patient data is locked in unstructured notes, invisible to modern analytical systems. This solution bridges this interoperability gap by transforming raw medical notes into useful data formats.**
 
 ---
 
