@@ -1,5 +1,9 @@
 # 🏥 HealthNotes-to-FHIR: Development Diary
 
+**The clinical world is trapped in a "Free-Text Silo" where 80% of patient data is locked in unstructured notes, invisible to modern analytical systems. This repository bridges the clinical interoperability gap by transforming raw medical transcriptions into production-grade, cryptographically audited FHIR R4 resources.**
+
+---
+
 This repository is a live document of an engineering journey: translating unstructured medical notes into standardized FHIR R4 resources using LLMs. 
 
 Rather than a "finished product" manual, this README tracks our architectural pivots, experimental results, and the reasoning behind our technical decisions.
