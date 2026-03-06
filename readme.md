@@ -6,39 +6,58 @@ Rather than a "finished product" manual, this README tracks our architectural pi
 
 ---
 
-## 📅 Current Status: Native Structured Output & Evaluation Suite (v0.4)
-We have successfully implemented a professional evaluation architecture and upgraded our extraction engine to leverage native Gemini capabilities for 100% reliability.
+## 📅 Current Status: Professional Experimentation & Deep Auditing (v0.5)
+We have transitioned from a single-threaded extraction tool into a multi-threaded, self-auditing clinical engine. The system now captures not just the *output*, but the *reasoning* behind every clinical decision.
 
 ### Recent Breakthroughs
-- **[2024-03-05] LLM-as-a-Judge & Elite Benchmark:**
-    - **Curation:** Developed `curate_complex_samples.py` to filter the **Top 1%** most structural and complex medical notes from the dataset.
-    - **Judgment:** Implemented `evaluator.py` where `gemini-pro-latest` acts as a Chief Medical Officer, scoring extraction quality on Recall, Precision, and Integrity.
-    - **Result:** Established a high-complexity baseline of **9.15/10** clinical accuracy.
-- **[2024-03-05] Native Structured Output Upgrade:**
-    - **Modernization:** Refactored the pipeline to use Gemini's **Native JSON Schema** enforcement (`response_json_schema`).
-    - **Efficiency:** Removed 30% of prompt formatting noise, allowing the model to focus purely on clinical reasoning.
-    - **Reliability:** Structural failure rate reduced to effectively **0%**.
+- **[2026-03-05] Parallel Execution & Scalability:**
+    - **Performance:** Implemented multi-threaded processing (`ThreadPoolExecutor`) allowing for 2x faster results on large datasets.
+    - **CLI Control:** Added arguments for flexible testing (`--n <count>` and `--parallel` flags).
+    - **Thread Safety:** Integrated `threading.Lock` to ensure data integrity during high-concurrency 
+- **[2026-03-05] The "Deep Audit" (Explainability):**
+    - **Transparency:** Now capturing the `thought_signature` (Chain of Thought) from both the Extraction and Judging models.
+    - **Forensics:** Reasoning is base64-encoded and stored in the `audit_log.csv` (v0.8), allowing clinicians to audit *why* the AI assigned a specific code or score.
+- **[2026-03-05] Unified Evaluation Engine:**
+    - **Consolidation:** Merged deterministic structural valiation into the LLM-as-a-Judge suite.
+    - **Precision:** The Judge now performs a "Gatekeeper" check for FHIR structural integrity before proceeding to clinical qualitative analysis.
 
 ---
 
-## 🏗️ The Architecture (v0.4)
+## 🏗️ The Engineering Architecture (v0.5)
 
 ```mermaid
 graph TD
-    A[Unstructured Note] --> B(LLM: Native Structured Output)
-    B --> C{Pydantic Validation}
-    C -- Success --> D(Python: FHIR Resource Assembly)
-    C -- Fail --> E[Error Log]
-    D --> F(Generate UUIDs & Link References)
-    F --> G[Valid FHIR R4 Bundle]
-    G --> H(LLM Judge: Clinical Evaluation)
+    subgraph Extraction_Assembly ["1. The Pipeline (Extraction & Assembly)"]
+        A[Clinical Note] --> B(Gemini Flash: Clinical Extraction)
+        B --> C{Pydantic Check}
+        C -- Valid --> D(FHIR Assembly & UUID Linking)
+        D --> E[FHIR Transaction Bundle]
+    end
+
+    subgraph Evaluation_Judge ["2. The Judge Suite (Unified Validation)"]
+        E --> F{Gatekeeper: Structural Check}
+        F -- Passed --> G(Gemini Pro: Qualitative Review)
+        F -- Failed --> H[Audit: Structural Error Log]
+        G --> I[Final Score & Strengths/Weaknesses]
+    end
+
+    subgraph Deep_Audit ["3. The Audit Trail (v0.8 Schema)"]
+        B -.-> J[Extraction Chain of Thought]
+        G -.-> K[Judge Chain of Thought]
+        J & K --> L[(v0.8 Enriched Audit CSV)]
+        I --> L
+        H --> L
+    end
+
+    style J stroke-dasharray: 5 5
+    style K stroke-dasharray: 5 5
 ```
 
 ### Core Components
-*   **`evaluator.py`**: The Judge. CMIO-level evaluation using `gemini-pro-latest`.
-*   **`models.py`**: The "Intermediate Truth". Pydantic models for clinical entities.
-*   **`pipeline.py`**: The Orchestrator. Executes extraction and strict programmatic assembly.
-*   **`curate_complex_samples.py`**: The Curation Engine for the elite data set.
+*   **`evaluator.py`**: The Judge. Now a unified engine performing both deterministic structural validation and CMIO-level clinical review.
+*   **`pipeline.py`**: The Orchestrator. Handles structured extraction with reasoning capture and strict FHIR assembly.
+*   **`run_experiment.py`**: The High-Performance Runner. Supports parallel processing, CLI arguments, and thread-safe logging.
+*   **`models.py`**: The Schema Truth. Defines Pydantic models for both clinical data and judge evaluations.
 
 ---
 
@@ -49,52 +68,35 @@ Tested on the top 1% most complex transcribed notes.
 | :--- | :--- |
 | **Structural Integrity** | **100%** |
 | **Average Judge Score** | **9.15/10** |
-| **Hallucination Rate** | **~0%** |
+| **Concurrency Support** | **2 parallel threads** |
+| **Audit Depth** | **Full reasoning signatures captured** |
 
 ---
 
-## 📓 Engineering Lessons Learned
-1. **Schema Enforcement > Prompt Engineering:** Native Structured Output (`response_json_schema`) is more reliable than even the most detailed markdown instructions.
-2. **Judge-Led Development:** Having an LLM-as-a-Judge allows for quantitative tracking of recall and precision without manual clinician review for every iteration.
-3. **Deterministic Assembly:** Link-rot in FHIR graphs is best solved by Python UUID generation, not LLM probability.
+## 🚀 The Path Forward: Clinical Intelligence Roadmap
 
-### 🤖 Orchestration: Why we aren't using a Framework (Yet)
-We've opted to keep the current orchestrator in **Raw Python (`pipeline.py`)**. 
-- **The Philosophy**: At this stage, the pipeline is a **Linear Chain**. Introducing a framework like LangGraph or CrewAI would be **over-engineering**, adding latency and complexity for no immediate benefit.
-- **The Pivot Point**: We will migrate to **LangGraph in Sprint 2**. Once we introduce the "Critic" agent, the workflow becomes **Cyclic** (feedback loops). Frameworks excel at managing stateful graphs and loops, whereas raw Python becomes hard to manage as agent dialogue grows.
+### Sprint 1: Audit & Reflection
+*   **Deep Reasoning Analysis**: Systematically analyze the captured `thought_signature` and judging logs to understand extraction failures and patterns.
+*   **Recursive Improvement**: Use these findings to refine prompts and logical assembly rules for higher clinical accuracy.
 
----
+### Sprint 2: The Bilingual Brain (Portuguese Expansion)
+*   **PT-BR Adaptation**: Calibrating prompts to handle Brazilian clinical nuances and datasets (e.g., **BRATECA** and **SemClinBr**).
+*   **Multilingual Extraction**: Ensuring 100% reliability for both EN-US and PT-BR transcripts using the same unified pipeline.
 
-## 🚀 The Path Forward: "Multi-Agent Consensus"
+### Sprint 3: Integration & Evidence
+*   **Real Terminology APIs**: Transition from standalone LLM extraction to live API consumption (e.g., NIH UMLS/VSAC) to verify and ground clinical codes.
+*   **Agentic Conflict Resolver**: Implementing a dedicated agent responsible for **Contradiction Detection**, cross-referencing extracted FHIR findings with the source text to surface clinical discrepancies.
 
-I'm aiming for a professional-grade clinical intelligence system that **reasons** like a clinician.
+### Sprint 4: Security & Privacy
+*   **PII/PHI Scrubbing**: Implement local de-identification using **Microsoft Presidio** to ensure sensitive clinical data is scrubbed before processing (supporting multi-language entities).
 
-### Sprint 1: The Bilingual Clinical Brain
-*   **Autonomous Detection**: Dynamically adapting to PT-BR vs EN-US clinical nuances (e.g., "HAS" vs "HTN").
-*   **Global Mapping**: Extraction of ICD-10, SNOMED, and LOINC with confidence scores.
-*   **Large-Scale Benchmark**: Validating against 1,000+ notes from the **BRATECA** dataset.
+### Sprint 5: Professional Infrastructure
+*   **Enterprise API**: Deploy the pipeline as a production-grade **FastAPI** service.
+*   **Traffic Management**: Implement strict rate limits and session management to ensure system stability and cost control.
 
-### Sprint 2: The "Consultation Room" Protocol
-*   **Agentic Trio**: Coordination between Extraction, Terminology, and a "Chief Medical Officer" Critic agent.
-*   **Clinical Reasoning Chains**: Recursive reasoning to resolve conflicts flagged by the Critic.
-*   **Verification Bridge**: Real-time integration with UMLS/UTS clinical ontologies.
-
-### Sprint 3: Enterprise-Grade Clinical Gateway
-*   **Agentic Anonymization**: Dedicated scrubbing of PII/PHI *before* data processing.
-*   **Production Backend**: Scalable FastAPI implementation with Redis rate-limiting and session memory.
-
-### Sprint 4: The Clinical Command Center
-*   **Next.js & React Frontend**: A premium, production-ready UI replacing experimental dashboards.
-*   **Interactive Graph Visualizer**: A dynamic canvas showing real-time "Note-to-Graph" transformations.
-*   **Streaming Classification**: High-availability websockets for instantaneous response.
-
----
-
-## 📂 Future Expansion: Portuguese & Global Coding
-For the upcoming phases (Sprint 1), we have identified key datasets for bilingual and coding-heavy experimentation:
-1. **BRATECA (Brazilian Tertiary Care Dataset)**: ~2.5M free-text notes from 10 Brazilian hospitals. Our primary target for PT-BR clinical logic.
-2. **SemClinBr**: A semantically annotated Brazilian corpus (1,000 notes). Essential for "Gold Standard" validation.
-3. **ClinPt**: European Portuguese case texts from the *Sinapse* journal for terminology nuance testing.
+### Sprint 6: Unified User Interface
+*   **Professional UI**: Build a clean, intuitive frontend connected to the API for easy testing and demonstration.
+*   **Voice Clinical Intake**: Integrate **OpenAI Whisper** so users can input clinical notes directly via audio dictation (supporting multiple languages).
 
 ---
 

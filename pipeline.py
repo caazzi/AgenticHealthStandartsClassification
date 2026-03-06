@@ -1,5 +1,6 @@
 import uuid
 import logging
+import base64
 from google.genai import Client
 from config import GOOGLE_API_KEY, MODEL_NAME
 from prompt_factory import build_extraction_prompt
@@ -25,15 +26,15 @@ class FHIRPipeline:
 
     def run_pipeline(self, text: str):
         logging.info("Starting Clinical Extraction Stage...")
-        raw_extraction = self._extract_clinical_info(text)
+        raw_extraction, extraction_thoughts = self._extract_clinical_info(text)
         if not raw_extraction:
-            return None
+            return None, extraction_thoughts
         
         logging.info("Starting FHIR Assembly Stage...")
         bundle = self._assemble_fhir_bundle(raw_extraction)
-        return bundle
+        return bundle, extraction_thoughts
 
-    def _extract_clinical_info(self, text: str) -> ClinicalExtraction:
+    def _extract_clinical_info(self, text: str):
         prompt = build_extraction_prompt(text)
         try:
             response = self.client.models.generate_content(
@@ -44,11 +45,36 @@ class FHIRPipeline:
                     "response_json_schema": ClinicalExtraction.model_json_schema()
                 }
             )
-            # Use model_validate_json for more robust parsing
-            return ClinicalExtraction.model_validate_json(response.text)
+            
+            # Extract parts without triggering the 'non-text parts' warning
+            result_json = None
+            thoughts = None
+            
+            for part in response.candidates[0].content.parts:
+                if part.text:
+                    result_json = part.text
+                
+                # Check for various forms of thoughts
+                part_thoughts = getattr(part, 'thought_signature', None)
+                if part_thoughts:
+                    thoughts = base64.b64encode(part_thoughts).decode('utf-8')
+                    logging.info("Captured thought_signature from response.")
+                
+                direct_thought = getattr(part, 'thought', None)
+                if direct_thought:
+                    thoughts = direct_thought
+                    logging.info("Captured direct thought from response.")
+
+            if not result_json:
+                logging.error("No JSON text found in extraction response")
+                return None, thoughts
+
+            extraction = ClinicalExtraction.model_validate_json(result_json)
+            return extraction, thoughts
+            
         except Exception as e:
             logging.error(f"Extraction failed: {e}")
-            return None
+            return None, None
 
     def _assemble_fhir_bundle(self, extraction: ClinicalExtraction) -> Bundle:
         entries = []
@@ -164,5 +190,10 @@ class FHIRPipeline:
             resource=resource,
             request=BundleEntryRequest(method="POST", url=resource.get_resource_type())
         )
+
+    def close(self):
+        """Clean up resources."""
+        self.client = None
+        logging.info("FHIRPipeline resources cleaned up.")
 
 pipeline = FHIRPipeline()
